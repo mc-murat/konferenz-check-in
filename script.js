@@ -1,5 +1,5 @@
 const camundaBaseUrl = "https://camunda-checkin.onrender.com/engine-rest";
-const processKey = "checkin"; // Passe diesen Key an deinen Prozessnamen an!
+const processKey = "Check-in"; // Passe diesen Key an deinen Prozessnamen an!
 
 // Funktion zum Starten des Prozesses bei Buttonklick
 async function checkIn() {
