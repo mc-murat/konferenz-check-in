@@ -1,15 +1,16 @@
-async function checkIn() {
-  const response = await fetch('http://<EURE_CAMUNDA_ENGINE>/engine-rest/process-definition/key/checkin/start', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ variables: {} })
-  });
-  alert('Check-in erfolgreich!');
+const camundaBaseUrl = "https://camunda-checkin.onrender.com/engine-rest";
+
+// Holt die aktuelle Teilnehmeranzahl von der Camunda-Engine
+async function ladeTeilnehmerzahl() {
+  try {
+    const res = await fetch(${camundaBaseUrl}/variable/besucherzahl);
+    const data = await res.json();
+    document.getElementById("status").textContent = ${data.value} / 200;
+  } catch (err) {
+    console.error("Fehler beim Laden der Teilnehmerzahl:", err);
+    document.getElementById("status").textContent = "nicht verfügbar";
+  }
 }
 
-// Optional: Besucherzahl laden
-fetch('http://<EURE_CAMUNDA_ENGINE>/engine-rest/variable/besucherzahl')
-  .then(res => res.json())
-  .then(data => {
-    document.getElementById('status').textContent = `${data.value} / 200`;
-  });
+// Beim Laden der Seite automatisch ausführen
+ladeTeilnehmerzahl();
