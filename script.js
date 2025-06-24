@@ -1,10 +1,10 @@
 // 🔗 Deine Camunda REST-URL
 const camundaBaseUrl = "https://camunda-checkin.onrender.com/engine-rest";
 
-// 🔁 Prozess-Key aus Camunda (Achtung: exakt schreiben!)
+// 🔁 Prozess-Key aus Camunda
 const processKey = "Check-in";
 
-// ▶ Funktion: Prozess starten (Check-in)
+// ▶ Prozess starten (Check-in)
 async function checkIn() {
   try {
     const response = await fetch(
@@ -34,7 +34,7 @@ async function checkIn() {
   }
 }
 
-// 🔎 Funktion: Teilnehmerzahl abrufen und anzeigen
+// 🔎 Teilnehmerzahl abfragen
 async function ladeTeilnehmerzahl() {
   try {
     const instanceRes = await fetch(
@@ -61,5 +61,5 @@ async function ladeTeilnehmerzahl() {
   }
 }
 
-// 🟢 Beim Laden der Seite sofort Teilnehmerzahl anzeigen
+// Seite lädt → Teilnehmerzahl laden
 window.onload = ladeTeilnehmerzahl;
