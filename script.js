@@ -7,7 +7,7 @@ const processKey = "Check-in";
 // ▶ Funktion: Prozess starten (Check-in)
 async function checkIn() {
   try {
-    const response = await fetch(${camundaBaseUrl}/process-definition/key/${processKey}/start, {
+    const response = await fetch(${camundaBaseUrl}/process-definition/key/Check-in/start, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
