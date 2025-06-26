@@ -1,15 +1,40 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>Konferenz Check-in</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <title>Check-In</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>Willkommen zur Konferenz</h1>
-  <p>Aktuelle Teilnehmerzahl: <span id="status">Lade...</span></p>
-  <button onclick="checkIn()">Jetzt einchecken</button>
+  <div class="container">
+    <h1>Personen Check-In</h1>
+    <p id="status">Noch niemand eingecheckt.</p>
+    <button onclick="checkIn()">Jetzt einchecken</button>
+  </div>
 
-  <script src="script.js"></script>
+  <script>
+    async function checkIn() {
+      const url = "https://camunda-production-55a3.up.railway.app/engine-rest/process-definition/key/checkin/start";
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          variables: {
+            besucherzahl: { value: 0, type: "Integer" }
+          }
+        })
+      });
+
+      if (response.ok) {
+        document.getElementById("status").innerText = "Check-In erfolgreich!";
+      } else {
+        document.getElementById("status").innerText = "Fehler beim Check-In!";
+        console.error(await response.text());
+      }
+    }
+  </script>
 </body>
 </html>
