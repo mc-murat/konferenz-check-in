@@ -1,21 +1,22 @@
-// 🔗 Deine Camunda REST-URL
-const camundaBaseUrl = "https://camunda-checkin.onrender.com/engine-rest";
+const camundaBaseUrl = "https://camunda-production-55a3.up.railway.app/engine-rest";
+const processKey = "checkin"; // exakt wie in deinem BPMN gesetzt
 
-// 🔁 Prozess-Key aus Camunda
-const processKey = "Check-in";
-
-// ▶ Prozess starten (Check-in)
 async function checkIn() {
   try {
     const response = await fetch(
-      camundaBaseUrl + "/process-definition/key/" + processKey + "/start",
+      `${camundaBaseUrl}/process-definition/key/${processKey}/start`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          variables: {}
+          variables: {
+            besucherzahl: {
+              value: 0,
+              type: "Integer"
+            }
+          }
         })
       }
     );
@@ -34,11 +35,10 @@ async function checkIn() {
   }
 }
 
-// 🔎 Teilnehmerzahl abfragen
 async function ladeTeilnehmerzahl() {
   try {
     const instanceRes = await fetch(
-      camundaBaseUrl + "/process-instance?processDefinitionKey=" + processKey
+      `${camundaBaseUrl}/process-instance?processDefinitionKey=${processKey}`
     );
     const instances = await instanceRes.json();
 
@@ -50,16 +50,15 @@ async function ladeTeilnehmerzahl() {
     const letzteInstanzId = instances[instances.length - 1].id;
 
     const res = await fetch(
-      camundaBaseUrl + "/process-instance/" + letzteInstanzId + "/variables/besucherzahl"
+      `${camundaBaseUrl}/process-instance/${letzteInstanzId}/variables/besucherzahl`
     );
     const data = await res.json();
 
-    document.getElementById("status").textContent = data.value + " / 200";
+    document.getElementById("status").textContent = `${data.value} / 200`;
   } catch (err) {
     console.error("Fehler beim Laden der Teilnehmerzahl:", err);
     document.getElementById("status").textContent = "Nicht verfügbar";
   }
 }
 
-// Seite lädt → Teilnehmerzahl laden
 window.onload = ladeTeilnehmerzahl;
