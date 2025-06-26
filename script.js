@@ -1,4 +1,4 @@
-const camundaBaseUrl = "https://camunda-production-55a3.up.railway.app/engine-rest";
+const camundaBaseUrl = "https://camunda-production-55a3.up.railway.app/engine-rest/engine";
 const processKey = "checkin"; // exakt wie in deinem BPMN gesetzt
 
 async function checkIn() {
