@@ -1,64 +1,61 @@
 const camundaBaseUrl = "https://camunda-production-55a3.up.railway.app/engine-rest";
 const processKey = "checkin"; // exakt wie in deinem BPMN gesetzt
 
-async function checkIn() {
-  try {
-    const response = await fetch(
-      `${camundaBaseUrl}/process-definition/key/${processKey}/start`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          variables: {
-            besucherzahl: {
-              value: 0,
-              type: "Integer"
-            }
-          }
-        })
-      }
-    );
+async function getMaxBesucherzahl() {
+  const res = await fetch("https://camunda-production-55a3.up.railway.app/engine-rest/process-instance?processDefinitionKey=checkin");
+  const instances = await res.json();
+  let max = 0;
 
-    if (response.ok) {
-      alert("Check-in erfolgreich!");
-      ladeTeilnehmerzahl();
-    } else {
-      const errorText = await response.text();
-      console.error("Fehler beim Prozessstart:", errorText);
-      alert("Check-in fehlgeschlagen.");
+  for (const inst of instances) {
+    try {
+      const varRes = await fetch(
+        `https://camunda-production-55a3.up.railway.app/engine-rest/process-instance/${inst.id}/variables/besucherzahl`
+      );
+      if (varRes.ok) {
+        const varData = await varRes.json();
+        if (typeof varData.value === "number" && varData.value > max) {
+          max = varData.value;
+        }
+      }
+    } catch (err) {
+      // kann ignoriert werden
     }
-  } catch (err) {
-    console.error("Verbindungsfehler:", err);
-    alert("Camunda nicht erreichbar.");
+  }
+  return max;
+}
+
+async function checkIn() {
+  let aktuelleZahl = await getMaxBesucherzahl();
+  aktuelleZahl = aktuelleZahl + 1;
+
+  const response = await fetch(
+    "https://camunda-production-55a3.up.railway.app/engine-rest/process-definition/key/checkin/start",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        variables: {
+          besucherzahl: { value: aktuelleZahl, type: "Integer" }
+        }
+      })
+    }
+  );
+
+  if (response.ok) {
+    document.getElementById("status").innerText = "Check-In erfolgreich!";
+    ladeTeilnehmerzahl(); // zeigt direkt neue Zahl an
+  } else {
+    document.getElementById("status").innerText = "Fehler beim Check-In!";
+    console.error(await response.text());
   }
 }
 
+
 async function ladeTeilnehmerzahl() {
-  try {
-    const instanceRes = await fetch(
-      `${camundaBaseUrl}/process-instance?processDefinitionKey=${processKey}`
-    );
-    const instances = await instanceRes.json();
-
-    if (instances.length === 0) {
-      document.getElementById("status").textContent = "0 / 200";
-      return;
-    }
-
-    const letzteInstanzId = instances[instances.length - 1].id;
-
-    const res = await fetch(
-      `${camundaBaseUrl}/process-instance/${letzteInstanzId}/variables/besucherzahl`
-    );
-    const data = await res.json();
-
-    document.getElementById("status").textContent = `${data.value} / 200`;
-  } catch (err) {
-    console.error("Fehler beim Laden der Teilnehmerzahl:", err);
-    document.getElementById("status").textContent = "Nicht verfügbar";
-  }
+  let maxBesucher = await getMaxBesucherzahl();
+  document.getElementById("status").textContent = `${maxBesucher} / 200`;
 }
 
 window.onload = ladeTeilnehmerzahl;
