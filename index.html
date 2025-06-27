@@ -4,78 +4,13 @@
   <meta charset="UTF-8" />
   <title>Check-In</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="script.js"></script>
 </head>
 <body>
   <div class="container">
     <h1>Personen Check-In</h1>
     <button onclick="startCheckIn()">Jetzt einchecken</button>
     <p id="status">Noch niemand eingecheckt.</p>
-
   </div>
-
-  <script>
-  let pollingIntervalId = null;
-let currentProcessInstanceId = null;
-
-async function startCheckIn() {
-  document.getElementById("status").innerText = "Lädt... Bitte warten Sie auf die Bestätigung.";
-
-  // Falls noch ein Polling läuft, stoppen
-  if (pollingIntervalId) {
-    clearInterval(pollingIntervalId);
-    pollingIntervalId = null;
-  }
-
-  // Prozess starten
-  const startResponse = await fetch("https://camunda-production-55a3.up.railway.app/engine-rest/process-definition/key/checkin/start", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({})
-  });
-  const processInstance = await startResponse.json();
-
-  currentProcessInstanceId = processInstance.id;
-
-  // Polling starten: alle 2 Sekunden prüfen, ob UserTask weg ist
-  pollingIntervalId = setInterval(async () => {
-    const tasksResponse = await fetch(`https://camunda-production-55a3.up.railway.app/engine-rest/task?processInstanceId=${currentProcessInstanceId}`);
-    const tasks = await tasksResponse.json();
-
-    if (tasks.length === 0) {
-      // UserTask erledigt
-      clearInterval(pollingIntervalId);
-      pollingIntervalId = null;
-      document.getElementById("status").innerText = "Check-In erfolgreich!";
-      ladeTeilnehmerzahl();
-    } else {
-      document.getElementById("status").innerText = "Bitte bestätigen Sie den Check-In im Camunda Cockpit.";
-    }
-  }, 2000);
-}
-
-async function ladeTeilnehmerzahl() {
-  // History API: alle Instanzen holen (auch beendete)
-  const res = await fetch("https://camunda-production-55a3.up.railway.app/engine-rest/history/process-instance?processDefinitionKey=checkin");
-  const instances = await res.json();
-  let max = 0;
-
-  for (const inst of instances) {
-    try {
-      const varRes = await fetch(`https://camunda-production-55a3.up.railway.app/engine-rest/history/variable-instance?processInstanceId=${inst.id}&variableName=besucherzahl`);
-      const varData = await varRes.json();
-      if (varData.length > 0 && varData[0].value > max) {
-        max = varData[0].value;
-      }
-    } catch {}
-  }
-  document.getElementById("status").textContent = `${max} / 200`;
-}
-
-// Lädt die Teilnehmerzahl, wenn die Seite geladen wird
-window.onload = ladeTeilnehmerzahl;
-
-</script>
-
-
 </body>
 </html>
