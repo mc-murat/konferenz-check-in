@@ -24,32 +24,31 @@ async function getMaxBesucherzahl() {
   return max;
 }
 
-async function checkIn() {
-  let aktuelleZahl = await getMaxBesucherzahl();
-  aktuelleZahl = aktuelleZahl + 1;
+async function startCheckIn() {
+  document.getElementById("status").innerText = "Lädt... Bitte warten Sie auf die Bestätigung.";
 
-  const response = await fetch(
-    "https://camunda-production-55a3.up.railway.app/engine-rest/process-definition/key/checkin/start",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        variables: {
-          besucherzahl: { value: aktuelleZahl, type: "Integer" }
-        }
-      })
+  // Prozess starten
+  const startResponse = await fetch("https://camunda-production-55a3.up.railway.app/engine-rest/process-definition/key/checkin/start", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({})
+  });
+  const processInstance = await startResponse.json();
+  const instanceId = processInstance.id;
+
+  // Polling starten, ob UserTask erledigt wurde
+  const intervalId = setInterval(async () => {
+    const tasksResponse = await fetch(`https://camunda-production-55a3.up.railway.app/engine-rest/task?processInstanceId=${instanceId}`);
+    const tasks = await tasksResponse.json();
+
+    if (tasks.length === 0) {
+      clearInterval(intervalId);
+      document.getElementById("status").innerText = "Check-In erfolgreich!";
+      ladeTeilnehmerzahl();
+    } else {
+      document.getElementById("status").innerText = "Bitte bestätigen Sie den Check-In im Camunda Cockpit.";
     }
-  );
-
-  if (response.ok) {
-    document.getElementById("status").innerText = "Check-In erfolgreich!";
-    ladeTeilnehmerzahl(); // zeigt direkt neue Zahl an
-  } else {
-    document.getElementById("status").innerText = "Fehler beim Check-In!";
-    console.error(await response.text());
-  }
+  }, 2000);
 }
 
 
