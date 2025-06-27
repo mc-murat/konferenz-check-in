@@ -42,6 +42,7 @@ function updateStatus(text) {
 }
 
 async function ladeTeilnehmerzahl() {
+  console.log("ladeTeilnehmerzahl() gestartet");
   const res = await fetch("https://camunda-production-55a3.up.railway.app/engine-rest/history/process-instance?processDefinitionKey=checkin");
   const instances = await res.json();
   let max = 0;
@@ -57,6 +58,7 @@ async function ladeTeilnehmerzahl() {
       console.error("Fehler beim Variablenladen", e);
     }
   }
+  console.log("Max Besucherzahl ermittelt:", max);
   document.getElementById("status").textContent = `${max} / 200`;
 }
 
