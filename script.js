@@ -53,8 +53,19 @@ async function startCheckIn() {
 
 
 async function ladeTeilnehmerzahl() {
-  let maxBesucher = await getMaxBesucherzahl();
-  document.getElementById("status").textContent = `${maxBesucher} / 200`;
-}
+  const res = await fetch("https://camunda-production-55a3.up.railway.app/engine-rest/history/process-instance?processDefinitionKey=checkin");
+  const instances = await res.json();
+  let max = 0;
 
+  for (const inst of instances) {
+    try {
+      const varRes = await fetch(`https://camunda-production-55a3.up.railway.app/engine-rest/history/variable-instance?processInstanceId=${inst.id}&variableName=besucherzahl`);
+      const varData = await varRes.json();
+      if (varData.length > 0 && varData[0].value > max) {
+        max = varData[0].value;
+      }
+    } catch {}
+  }
+  document.getElementById("status").textContent = `${max} / 200`;
+}
 window.onload = ladeTeilnehmerzahl;
