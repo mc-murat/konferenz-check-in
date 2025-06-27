@@ -1,7 +1,9 @@
+const camundaBaseUrl = 'https://camunda-production-55a3.up.railway.app/engine-rest';
+
 let processInstanceId = null;
 
 async function startProcess() {
-  const response = await fetch('https://camunda-production-55a3.up.railway.app/engine-rest/process-definition/key/checkin/start', {
+  const response = await fetch(`${camundaBaseUrl}/process-definition/key/checkin/start`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({})
@@ -11,7 +13,7 @@ async function startProcess() {
 }
 
 async function sendCheckInMessage(processInstanceId) {
-  await fetch('https://camunda-production-55a3.up.railway.app/engine-rest/message', {
+  await fetch(`${camundaBaseUrl}/message`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -22,12 +24,12 @@ async function sendCheckInMessage(processInstanceId) {
 }
 
 async function ladeTeilnehmerzahl() {
-  const res = await fetch('https://camunda-production-55a3.up.railway.app/engine-rest/history/process-instance?processDefinitionKey=checkin');
+  const res = await fetch(`${camundaBaseUrl}/history/process-instance?processDefinitionKey=checkin`);
   const instances = await res.json();
   let max = 0;
   for (const inst of instances) {
     try {
-      const varRes = await fetch(`https://camunda-production-55a3.up.railway.app/engine-rest/history/variable-instance?processInstanceId=${inst.id}&variableName=besucherzahl`);
+      const varRes = await fetch(`${camundaBaseUrl}/history/variable-instance?processInstanceId=${inst.id}&variableName=besucherzahl`);
       const varData = await varRes.json();
       if (varData.length > 0 && varData[0].value > max) {
         max = varData[0].value;
