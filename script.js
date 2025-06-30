@@ -1,50 +1,33 @@
 const camundaBaseUrl = 'https://camunda-production-55a3.up.railway.app/engine-rest';
 
-let processInstanceId = null;
-
-async function startProcess() {
-  const response = await fetch(`${camundaBaseUrl}/process-definition/key/checkin/start`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({})
-  });
-  const data = await response.json();
-  return data.id;
-}
-
-async function sendCheckInMessage(processInstanceId) {
-  await fetch(`${camundaBaseUrl}/message`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      messageName: 'CheckInButtonClicked',
-      processInstanceId: processInstanceId
-    })
-  });
-}
-
+// Teilnehmerzahl laden und anzeigen (Anzahl beendeter Check-In-Prozesse)
 async function ladeTeilnehmerzahl() {
-  const res = await fetch(`${camundaBaseUrl}/history/process-instance?processDefinitionKey=checkin`);
-  const instances = await res.json();
-  let max = 0;
-  for (const inst of instances) {
-    try {
-      const varRes = await fetch(`${camundaBaseUrl}/history/variable-instance?processInstanceId=${inst.id}&variableName=besucherzahl`);
-      const varData = await varRes.json();
-      if (varData.length > 0 && varData[0].value > max) {
-        max = varData[0].value;
-      }
-    } catch {}
+  try {
+    const res = await fetch(`${camundaBaseUrl}/history/process-instance?processDefinitionKey=checkin&finished=true`);
+    const instances = await res.json();
+    const count = instances.length;
+    document.getElementById('status').innerText = `${count} / 200 eingecheckt.`;
+  } catch (e) {
+    document.getElementById('status').innerText = 'Teilnehmerzahl konnte nicht geladen werden.';
   }
-  document.getElementById('status').innerText = `${max} / 200`;
 }
 
+// Button-Click: Prozess starten
 document.getElementById('checkInButton').addEventListener('click', async () => {
-  if (!processInstanceId) {
-    processInstanceId = await startProcess();
+  try {
+    await fetch(`${camundaBaseUrl}/process-definition/key/checkin/start`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    document.getElementById('status').innerText = 'Bitte Formular in der Prozess Engine ausfüllen!';
+  } catch (e) {
+    document.getElementById('status').innerText = 'Fehler beim Starten des Check-Ins!';
   }
-  await sendCheckInMessage(processInstanceId);
-  document.getElementById('status').innerText = 'Bitte Formular im Camunda Cockpit bestätigen...';
 });
 
-window.onload = ladeTeilnehmerzahl;
+// Automatisch alle 3 Sekunden Teilnehmerzahl aktualisieren
+window.onload = () => {
+  ladeTeilnehmerzahl();
+  setInterval(ladeTeilnehmerzahl, 3000);
+};
